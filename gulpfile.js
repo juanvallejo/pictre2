@@ -14,22 +14,21 @@ var watchify = require('watchify');
 
 var gutil = require('gulp-util');
 
+var bundle = browserify({
+
+	cache: {},
+	detectGlobals: false,
+	debug: true,
+	entries: ['./src/main.js'],
+	fast: true,
+	extensions: ['.js'],
+	packageCache: {},
+	fullPaths: true
+
+});
+
 // define tasks
-
 gulp.task('default', function() {
-
-	var bundle = browserify({
-
-		cache: {},
-		detectGlobals: false,
-		debug: true,
-		entries: ['./src/main.js'],
-		fast: true,
-		extensions: ['.js'],
-		packageCache: {},
-		fullPaths: true
-
-	});
 
 	// watchify ~ gulp.watch, but efficient
 	bundle = watchify(bundle);
@@ -39,6 +38,19 @@ gulp.task('default', function() {
 
 	return build(bundle);
 
+});
+
+gulp.task('watch', function() {
+	bundle = watchify(bundle);
+	bundle.on('update', function() {
+		build(bundle);
+	});
+	
+	return build(bundle);
+});
+
+gulp.task('build', function() {
+	return build(bundle);
 });
 
 /**
