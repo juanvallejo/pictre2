@@ -35,6 +35,7 @@ Globals.rootDirectory = __dirname;
 	});
 	application.listen(Globals.SERVER_PORT, Globals.SERVER_HOST);
 
+	console.log('Application listening on port', Globals.SERVER_PORT);
 	// initialize socket.io
 	// Sockets.listen(application);
 
