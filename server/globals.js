@@ -22,14 +22,22 @@ if (process.argv[2] == '--force-production-state') {
 	Globals.USE_PRODUCTION_DB = true;
 }
 
-Globals.SERVER_HOST = process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0';
-Globals.SERVER_PORT = process.env.OPENSHIFT_NODEJS_PORT || 8000;
+Globals.SERVER_HOST = process.env.IP || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0';
+Globals.SERVER_PORT = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080;
 Globals.SERVER_HEAD_OK = 200;
 Globals.SERVER_HEAD_NOTFOUND = 404;
 Globals.SERVER_HEAD_ERROR = 500;
 Globals.SERVER_RES_OK = '200. Server status: OK';
 Globals.SERVER_RES_NOTFOUND = '404. The file you are looking for could not be found.';
 Globals.SERVER_RES_ERROR = '500. An invalid request was sent to the server.';
+
+// logs
+if (!process.env.OPENSHIFT_NODEJS_IP) {
+	console.log('No OpenShift env var for host found, defaulting to', Globals.SERVER_HOST);
+}
+if (!process.env.OPENSHIFT_NODEJS_PORT) {
+	console.log('No OpenShift env var for port found, defaulting to', Globals.SERVER_PORT);
+}
 
 // header modifier for api domain access control
 Globals.DEFAULT_PUBLIC_ACCESS_CONTROL = '*';
