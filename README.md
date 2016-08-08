@@ -1,24 +1,21 @@
 Modular NodeJS Application Template for Pictre.org
 ==================================================
 
-Modular application server with websocket support, and mysql library interface by Juan Vallejo.
+Modular application server with websocket support, and mysql library interface
 
 **Fork of [NodT](https://github.com/juanvallejo/NodT)**
 
-MIME type handler (for common files) and request router included.
+#### Deps
 
-###Openshift
+- Requires `nodejs` and `npm`
+- Requires `gulp`
+ - `npm install -g gulp`
 
-Comes with built-in Openshift support
+#### Building
+In the base repo directory:
 
-###API Endpoints
-
-Framework features a work-in-progress API endpoint handler, as well as public-facing API interface.
-
-###Database (MySQL)
-
-Support for MySQL included, with a wrapper for mysql requests in `database.js`
-
-###Settings
-
-To modify global settigs, use `globals.js` file.
+```
+$ npm install
+$ gulp
+$ node .
+```
