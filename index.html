@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="UTF-8"/>
+<meta name="author" content="Juan Vallejo"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="Pictre is a collection of cloud photo albums. You can view or create picture albums based on interests, people, or families."/>
+	<title>Pictre</title>
+<link rel="stylesheet" href="/static/reset.css"/>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="/static/styles.css"/>
+<link rel="shortcut icon" href="/static/i/favicon.ico"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="/static/exif.min.js"></script>
+<script src="/static/binary.min.js"></script>
+<script src="/static/ie.js"></script>
+<!-- <script src="/static/Pictre.js"></script> -->
+<script src="/dist/Pictre.js"></script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-41051135-1', 'pictre.org');
+  ga('send', 'pageview');
+</script>
+</head>
+<body>
+<script>
+(function(w,o,n,d,e,r){n=o.createElement("div");n.id="wrapper";o.body.appendChild(n);
+d='http://static-pictre.rhcloud.com/';r=w.location.hostname=='localhost'?true:false;
+e=r?'/':'http://static-pictre.rhcloud.com/static/';Pictre.init(w,n,d,e,r);
+n.style.height=$(w).height()+"px";})(window,document);
+</script>
+</body>
+</html>
