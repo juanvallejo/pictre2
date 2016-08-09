@@ -117,7 +117,7 @@ var MenuInterface = {
 		brand.innerHTML = Environment.app.title;
 
 		Utilities.extend(brand).on('click', function() {
-			window.location.href = Pictre._settings.app.address;
+			window.location.assign('/');
 		});
 
 		this.domElement.appendChild(brand);

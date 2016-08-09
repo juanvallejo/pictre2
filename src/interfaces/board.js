@@ -173,6 +173,12 @@ Board.imageLoadHandler = function(picture, image, setCount) {
 		Board.setLoader(loadedImageCount / setCount);
 	}
 
+	// build tree
+	picture.appendChild(image);
+	nodes.rootNode.appendChild(picture);
+
+	Board.pictures.push(picture);
+
 	if (loadedImageCount == setCount) {
 		loadedImageCount = 0;
 		isLoading = false;
@@ -187,12 +193,6 @@ Board.imageLoadHandler = function(picture, image, setCount) {
 		// emit 'load' event
 		Board.emit('load', [setCount]);
 	}
-
-	// build tree
-	picture.appendChild(image);
-	nodes.rootNode.appendChild(picture);
-
-	Board.pictures.push(picture);
 };
 
 // alert entire board
@@ -263,6 +263,7 @@ Board.create = function(Interfaces, Events, mainWindow, parentNode) {
 	// center nodes
 	Events.nowAndOnNodeEvent(mainWindow, 'resize', function() {
 		Interfaces.controller.centerNodeRelativeTo(nodes.loaderNode, mainWindow);
+		Interfaces.controller.horizontalCenterNodeRelativeTo(nodes.rootNode, mainWindow);
 	});
 };
 
@@ -280,6 +281,16 @@ Board.show = function(Interfaces, Events, Server, mainWindow, parentNode) {
 		Board.showAlert(Board.getName() + ' Picture Board', setCount);
 		Board.chisel(mainWindow);
 	});
+
+	Board.on('chisel', function(node, itemMargin) {
+		parentNode.style.height = (node.scrollHeight + itemMargin) + "px";
+		Interfaces.controller.horizontalCenterNodeRelativeTo(node, mainWindow);
+	});
+
+	Events.onNodeEvent(mainWindow, 'resize', function() {
+		Board.chisel(mainWindow);
+	});
+
 };
 
 Board.showAlert = function(bodyText, extraText) {
@@ -335,24 +346,23 @@ Board.emit = function(eventName, args) {
 // expects an offset (or zero)
 // scaffolds picture gallery
 Board.chisel = function(mainWindow, offset) {
-	if (!nodes.rootNode) {
+	if (!nodes.rootNode || !mainWindow || !Board.getSize()) {
 		return;
 	}
 
 	var windowWidth = mainWindow.innerWidth;
-	var itemWidth = Board.getPictureByIndex(0).offsetWidth;
+	var itemWidth = Board.pictures[0].offsetWidth;
 	var itemMargin = 0;
 	var columnCount = 0;
 
 	if (windowWidth && itemWidth) {
-		itemMargin = parseInt(mainWindow.getComputedStyle(Board.getImageByIndex(0)).getPropertyValue('margin-left').split("px")[0] * 2);
+		itemMargin = parseInt(mainWindow.getComputedStyle(Board.pictures[0]).getPropertyValue('margin-left').split("px")[0] * 2);
 		columnCount = Math.floor(windowWidth / (itemWidth + itemMargin));
 
 		if (columnCount > Board.getSize()) {
 			columnCount = Board.getSize();
 		}
-
-		nodes.rootNode.style.width = (columnCount * (itemWidth + itemMargin)) + "px";
+		nodes.rootNode.style.width = (columnCount * (itemWidth + (itemMargin))) + "px";
 
 		if (offset) {
 			// var x = a + 1;
@@ -369,7 +379,7 @@ Board.chisel = function(mainWindow, offset) {
 				Board.pictures[i].style.left = '0';
 			}
 			for (var i = 0; i < Board.getSize(); i += columnCount) {
-				Board.getPictureByIndex(i).first = true;
+				Board.pictures[i].first = true;
 			}
 			for (var i = 0; i < Board.getSize(); i++) {
 				var picture = Board.pictures[i];
@@ -384,7 +394,8 @@ Board.chisel = function(mainWindow, offset) {
 				}
 			}
 		}
-		// Pictre._settings.wrapper.parentNode.style.height = (Pictre._settings.wrapper.scrollHeight + itemMargin) + "px";
+
+		Board.emit('chisel', [nodes.rootNode, itemMargin]);
 	}
 };
 
