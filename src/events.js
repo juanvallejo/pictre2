@@ -9,7 +9,7 @@ var registeredNodeEvents = {};
 /**
  * Listens for a dom event
  */
-Events.onNodeEvent = function(node, eventName, callback) {
+Events.onCachedNodeEvent = function(node, eventName, callback) {
 	if (!registeredNodeEvents[node.nodeName]) {
 		registeredNodeEvents[node.nodeName] = {};
 	}
@@ -33,6 +33,14 @@ Events.onNodeEvent = function(node, eventName, callback) {
 	}
 
 	registeredNodeEvents[node.nodeName][eventName].push(callback);
+};
+
+Events.onNodeEvent = function(node, eventName, callback) {
+	try {
+		node.addEventListener(eventName, callback);
+	} catch (e) {
+		node.attachEvent('on' + eventName, callback);
+	}
 };
 
 // executes event "callbacks" on a node event and stores them

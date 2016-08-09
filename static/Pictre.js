@@ -2501,7 +2501,7 @@
 					wrapper.id = "Pictre-wrapper";
 					a.appendChild(wrapper);
 					this.set.wrapper(wrapper);
-					Pictre.get.ui.notice("Loading, please wait..."); ////--
+					Pictre.get.ui.notice("Loading, please wait...");
 					Pictre.get.db({
 						album: true,
 						resource: 'album',
@@ -2613,7 +2613,7 @@
 						Pictre._settings.wrapper.removeChild(Pictre._settings.wrapper.lastChild);
 					}
 
-					for (var i = 0; i < a.length; i++) { ////--
+					for (var i = 0; i < a.length; i++) {
 						Pictre.create.picture(a[i]);
 					}
 

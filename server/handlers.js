@@ -12,7 +12,7 @@ var fs = require('fs');
 var url = require('url');
 var https = require('https');
 
-var Api = require('./api.js');
+var API = require('./api.js');
 var Globals = require('./globals.js');
 var Mimes = require('./mimes.js');
 var PublicResponses = require('./public_responses.js');

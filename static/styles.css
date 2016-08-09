@@ -62,8 +62,28 @@ width:100%; height:50px; background:transparent/*rgba(28,30,29,1)*/; border-bott
 #wrapper {
 	width:100%; margin:0 auto 0 auto; position:relative;
 }
+	.Pictre-notice {
+		width:100%; 
+		min-height:18px;
+
+		display:block;
+		position:absolute;
+		top:4px; 
+		left:0;
+
+		margin:0 auto 0 auto;   
+		padding:11px 0 7px 0; 
+
+		color:rgb(169,225,250);
+		text-align:center;
+		font:400 0.8em 'Open Sans';
+	}
+
+		.Pictre-notice-extra {
+		max-width:52px; position:absolute; right:30px; text-align:right; top:11px; overflow-x:hidden;
+		}
 	#Pictre-wrapper {
-	width:100%; display:block; margin:2% auto 0 auto; position:relative; min-height:80%;
+	width:100%; display:block; margin:2% auto 0 auto; position:absolute; min-height:80%;
 	}
 	#Pictre-spotlight-wrapper {
 	width:100%; min-height:100%; margin:60px auto 0 auto; position:absolute; top:98px; display:block;
@@ -146,27 +166,6 @@ width:100%; height:50px; background:transparent/*rgba(28,30,29,1)*/; border-bott
 .brand {
 font-weight:normal; font-style:italic; font-family:'Molle'; margin-right:4px;
 }
-.Pictre-notice {
-
-	width:100%; 
-	min-height:18px;
-
-	display:block;
-	position:absolute;
-	top:54px; 
-	left:0;
-
-	margin:0 auto 0 auto;   
-	padding:11px 0 7px 0; 
-
-	color:rgb(169,225,250);
-	text-align:center;
-	font:400 0.8em 'Open Sans';
-	
-}
-	.Pictre-notice-extra {
-	max-width:52px; position:absolute; right:30px; text-align:right; top:11px; overflow-x:hidden;
-	}
 .Pictre-home-wrapper {
 width:65%; height:30%; margin:0 auto 0; position:absolute; left:0; top:10%; text-align:center; min-height:240px; z-index:997;
 }
@@ -204,13 +203,13 @@ width:45%; height:1px; background:rgb(8,27,41)/*rgb(44,44,44)*/; position:absolu
     	left:0; 
     	top:0; 
 
-    	background:rgb(255,255,255);
+    	background:rgba(255,255,255, 0.2);
 
-    	box-shadow:			inset 0 1px 5px rgb(4,13,20);
+    	/*box-shadow:			inset 0 1px 5px rgb(4,13,20);
     	-moz-box-shadow:	inset 0 1px 5px rgb(4,13,20); 
     	-o-box-shadow:		inset 0 1px 5px rgb(4,13,20); 
     	-ms-box-shadow:		inset 0 1px 5px rgb(4,13,20);
-    	-webkit-box-shadow:	inset 0 1px 5px rgb(4,13,20);
+    	-webkit-box-shadow:	inset 0 1px 5px rgb(4,13,20);*/
 	}
 .Pictre-pic {
 	

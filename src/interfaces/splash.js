@@ -15,6 +15,7 @@ SplashInterface.settings = {
 	alertTimeout: 10000
 };
 
+var isCreated = false;
 var parentNodeCache = {};
 
 SplashInterface.showAlert = function(Interfaces, text) {
@@ -81,7 +82,8 @@ SplashInterface.attachInputs = function(Interfaces, Events, Client, mainWindow) 
 };
 
 SplashInterface.show = function(Interfaces, Events, Client, mainWindow, parentNode) {
-	if (!nodes.rootNode) {
+	if (!isCreated) {
+		isCreated = true;
 		nodes.rootNode = Interfaces.controller.createDivNode(mainWindow);
 		nodes.rootNode.className = 'Pictre-splash-wrapper';
 		nodes.rootNode.style.zIndex = 998;
@@ -107,7 +109,7 @@ SplashInterface.show = function(Interfaces, Events, Client, mainWindow, parentNo
 	SplashInterface.attachInputs(Interfaces, Events, Client, mainWindow);
 
 	Interfaces.overlay.show(mainWindow);
-	Interfaces.modal.show(Interfaces, Events, Client, mainWindow, parentNode);
+	Interfaces.modal.show(Interfaces, Events, mainWindow, parentNode);
 
 	Interfaces.controller.setNodeOverflowHidden(mainWindow.document.body);
 	Interfaces.overlay.lock();

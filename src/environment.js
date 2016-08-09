@@ -19,10 +19,19 @@ Environment.app = {
 
 Environment.events = {};
 
-Environment.inProduction 	= false;
-Environment.isUpdating 		= false;
+Environment.inProduction = false;
+Environment.isUpdating = false;
 
-Environment.animationSpeed 	= 1000;
-Environment.maxImageWidth 	= 800;
+Environment.animationSpeed = 1000;
+Environment.maxImageWidth = 800;
+Environment.maxImageHeight = 137;
+Environment.alertDuration = 10000;
+
+Environment.baseAPIUrl = 'http://static-pictre.rhcloud.com/';
+
+// load x items on page load
+Environment.itemAmountPageLoad = 50;
+// load x items per subsequent request
+Environment.itemAmountRequest = 25;
 
 module.exports = Environment;

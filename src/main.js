@@ -12,6 +12,7 @@ var Client = require('./client.js');
 var Environment = require('./environment.js');
 var Interfaces = require('./interface.js');
 var Events = require('./events.js');
+var Server = require('./server.js');
 
 var Pictre = {};
 
@@ -39,24 +40,23 @@ Pictre.init = function(mainWindow, applicationWrapper, resourceLocation, appData
 	// create and place menu before application wrapper
 	Interfaces.menu.put(mainWindow.document.body, applicationWrapper);
 
+	// detect client settings
 	Client.init();
 
 	if (Interfaces.board.isSet()) {
-		// if (Board.get().toLowerCase().match(/[^a-z0-9\-\.\+\_]/gi)) {
-		// 	var err = document.createElement("p");
-		// 	err.innerHTML = "404. The album you are looking for cannot be found.";
-		// 	err.className = "Pictre-home-wrapper-about";
-		// 	Pictre.get.ui.notice("This album does not exist as it contains invalid characters in its name.");
-		// 	err.appendChild(spacer);
-		// 	Pictre.get.ui.splash.put("This album does not exist as it contains invalid characters in its name.");
+		var boardName = Interfaces.board.getName();
+		if (Interfaces.board.isNameRestricted(boardName) || Interfaces.board.isNameInvalid(boardName)) {
+			Interfaces.splash.show(Interfaces, Events, Client, mainWindow, mainWindow.document.body);
+			if (Interfaces.board.isNameRestricted(boardName)) {
+				Interfaces.splash.showAlert(Interfaces, 'That album is restricted, please try another.');
+			} else {
+				Interfaces.splash.showAlert(Interfaces, 'Your album contains invalid characters.');
+			}
+			return;
+		}
 
-		// } else if (Pictre._settings.pages.restricted.indexOf(Pictre.board.get().toLowerCase()) != -1) {
-		// 	var err = document.createElement("p");
-		// 	err.innerHTML = "403. The album you are looking for is restricted. Try another one by typing it above or type another album address.";
-		// 	err.className = "Pictre-home-wrapper-about";
-		// 	Pictre.get.ui.notice("This album is private or restricted. Please try another one.");
-		// 	err.appendChild(spacer);
-		// 	Pictre.get.ui.splash.put("This album is private or restricted.");
+		Interfaces.board.show(Interfaces, Events, Server, mainWindow, applicationWrapper);
+		Interfaces.board.showAlert('Loading, please wait...');
 
 		// } else {
 		// 	Pictre.board.exists = true;

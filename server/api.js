@@ -189,71 +189,61 @@ API.parseGETRequest = function(request, response) {
 	var apiRequestFragment = apiRequest.split('/');
 
 	// fetch a resource from the database
-	if (apiRequestFragment[0] == 'get') {
+	if (apiRequestFragment[0] == 'album') {
 
 		// example: api/get/album/orozco/0/50
-		var resource = apiRequestFragment[1]; // album, image, users, etc..
-		var identifier = apiRequestFragment[2]; // album name, admin users, etc..
-		var anchor = apiRequestFragment[3]; // return rows starting at row {anchor}
-		var limit = apiRequestFragment[4]; // how many rows to return of requested resource
+		var albumName = apiRequestFragment[1];
+		var anchor = apiRequestFragment[2]; // album name, admin users, etc..
+		var limit = apiRequestFragment[3]; // limit of items to return
+		////--
+		API.getAlbumDataFromDatabase(albumName, anchor, limit, function(err, rows, cols) {
 
+			if (err) {
+				console.log('(Error): Api > Mysql -> ' + err);
+				return PublicResponses.respondWithJSON(response, Errors.MYSQL.ERR_FETCH_ALBUMDATA, 500);
+			}
 
-		if (resource == 'album') {
-
-			API.getAlbumDataFromDatabase(identifier, anchor, limit, function(err, rows, cols) {
+			// fetch comments
+			API.getCommentsFromDatabase(function(err, commentRows, commentCols) {
 
 				if (err) {
-					console.log('(Error): Api > Mysql -> ' + err);
-					return PublicResponses.respondWithJSON(response, Errors.MYSQL.ERR_FETCH_ALBUMDATA, 500);
+					console.log('(Error): Api > Mysql > Mysql -> ' + err);
 				}
 
-				// fetch comments
-				API.getCommentsFromDatabase(function(err, commentRows, commentCols) {
+				// categorize comments by pictureId
 
-					if (err) {
-						console.log('(Error): Api > Mysql > Mysql -> ' + err);
+				var comments = {};
+
+				for (var i = 0; i < commentRows.length; i++) {
+
+					if (!comments[commentRows[i].pictureId]) {
+						comments[commentRows[i].pictureId] = [];
 					}
 
-					// categorize comments by pictureId
+					comments[commentRows[i].pictureId].push(commentRows[i]);
 
-					var comments = {};
+				}
 
-					for (var i = 0; i < commentRows.length; i++) {
+				// add comments to each album row
 
-						if (!comments[commentRows[i].pictureId]) {
-							comments[commentRows[i].pictureId] = [];
-						}
+				for (var i = 0; i < rows.length; i++) {
 
-						comments[commentRows[i].pictureId].push(commentRows[i]);
+					var imageComments = [];
 
+					if (comments[rows[i].id]) {
+						imageComments = comments[rows[i].id];
 					}
 
-					// add comments to each album row
+					rows[i].comments = imageComments;
 
-					for (var i = 0; i < rows.length; i++) {
+				}
 
-						var imageComments = [];
-
-						if (comments[rows[i].id]) {
-							imageComments = comments[rows[i].id];
-						}
-
-						rows[i].comments = imageComments;
-
-					}
-
-					// output image data with comments appended
-					PublicResponses.respondWithJSON(response, rows, 200);
-
-				});
+				// output image data with comments appended
+				PublicResponses.respondWithJSON(response, rows, 200);
 
 			});
 
-		} else if (resource == 'image') {
-			PublicResponses.respondWithJSON(response, Errors.API.ERR_API_UNFINISHED_ENDPOINT, 500);
-		} else {
-			PublicResponses.respondWithJSON(response, Errors.API.ERR_API_UNFINISHED_ENDPOINT, 500);
-		}
+		});
 
 	} else if (apiRequestFragment[0] == 'message') {
 

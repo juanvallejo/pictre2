@@ -12,8 +12,7 @@ var Globals = {};
 // define application constants
 
 Globals.IN_PRODUCTION = process.env.OPENSHIFT_NODEJS_IP ? true : false;
-// Globals.USE_PRODUCTION_DB		= Globals.IN_PRODUCTION;
-Globals.USE_PRODUCTION_DB = false;
+Globals.USE_PRODUCTION_DB = Globals.IN_PRODUCTION;
 
 // if a --force-production-state flag is passed on the command line, force the global IN_PRODUCTION constant to be true
 // used for debugging offline, with a live, port-forwarded copy of the database
@@ -32,10 +31,10 @@ Globals.SERVER_RES_NOTFOUND = '404. The file you are looking for could not be fo
 Globals.SERVER_RES_ERROR = '500. An invalid request was sent to the server.';
 
 // logs
-if (!process.env.OPENSHIFT_NODEJS_IP) {
+if (!process.env.OPENSHIFT_NODEJS_IP && !process.env.IP) {
 	console.log('No OpenShift env var for host found, defaulting to', Globals.SERVER_HOST);
 }
-if (!process.env.OPENSHIFT_NODEJS_PORT) {
+if (!process.env.OPENSHIFT_NODEJS_PORT && !process.env.PORT) {
 	console.log('No OpenShift env var for port found, defaulting to', Globals.SERVER_PORT);
 }
 
@@ -45,7 +44,7 @@ Globals.DEFAULT_PUBLIC_ACCESS_CONTROL = '*';
 // define mysql constants
 
 if (Globals.USE_PRODUCTION_DB) {
-
+	console.log('Using production database / port-forwarded database');
 	Globals.MYSQL_DEFAULT_HOST = process.env.OPENSHIFT_MYSQL_DB_HOST || 'localhost';
 	Globals.MYSQL_DEFAULT_PASS = 'i4JF6GlABkqW';
 	Globals.MYSQL_DEFAULT_DB = 'static';
@@ -53,7 +52,7 @@ if (Globals.USE_PRODUCTION_DB) {
 	Globals.MYSQL_DEFAULT_PORT = process.env.OPENSHIFT_MYSQL_DB_PORT || '41976';
 
 } else {
-
+	console.log('Using local');
 	Globals.MYSQL_DEFAULT_HOST = 'localhost';
 	Globals.MYSQL_DEFAULT_PASS = '';
 	Globals.MYSQL_DEFAULT_DB = 'static';

@@ -1,6 +1,9 @@
 /**
  * Modal controller - displays information with optional user inputs
+ * Requires an overlay
  */
+
+var Environment = require('../environment.js');
 
 var Modal = {};
 var nodes = {
@@ -25,7 +28,7 @@ var mainDiv = null;
 var parentNodeCache = {};
 
 Modal.settings = {
-	alertDuration: 10000
+	alertDuration: Environment.alertDuration
 };
 
 Modal.components = {
@@ -52,7 +55,7 @@ Modal.update = function() {
 	}
 };
 
-Modal.create = function(Interfaces, Events, Client, mainWindow, parentNode) {
+Modal.create = function(Interfaces, Events, mainWindow, parentNode) {
 	// goes on top of background, simulates overlay node
 	// in order for its child nodes to have correct relative
 	// position to a full browser page
@@ -131,10 +134,10 @@ Modal.create = function(Interfaces, Events, Client, mainWindow, parentNode) {
  * Displays or creates the modal, then displays.
  * receives an optional array of inputs to display
  */
-Modal.show = function(Interfaces, Events, Client, mainWindow, parentNode, inputsArray) {
+Modal.show = function(Interfaces, Events, mainWindow, parentNode, inputsArray) {
 	if (!isCreated) {
 		isCreated = true;
-		Modal.create(Interfaces, Events, Client, mainWindow, parentNode);
+		Modal.create(Interfaces, Events, mainWindow, parentNode);
 	} else {
 		Modal.update();
 		Interfaces.controller.centerNodeRelativeTo(nodes.containerNode, mainWindow);
@@ -177,6 +180,10 @@ Modal.addInput = function(input) {
 };
 
 Modal.showAlert = function(text, timeout) {
+	if (!nodes.outputNode) {
+		return console.log('MODAL ALERT', 'Error displaying alert, no outputNode has been created; "show" the node first.');
+	}
+
 	nodes.outputNode.innerHTML = text;
 	nodes.outputNode.style.display = 'block';
 
