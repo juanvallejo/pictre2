@@ -22,7 +22,7 @@ if (process.argv[2] == '--force-production-state') {
 }
 
 Globals.SERVER_HOST = process.env.IP || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0';
-Globals.SERVER_PORT = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080;
+Globals.SERVER_PORT = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8000;
 Globals.SERVER_HEAD_OK = 200;
 Globals.SERVER_HEAD_NOTFOUND = 404;
 Globals.SERVER_HEAD_ERROR = 500;
@@ -52,7 +52,7 @@ if (Globals.USE_PRODUCTION_DB) {
 	Globals.MYSQL_DEFAULT_PORT = process.env.OPENSHIFT_MYSQL_DB_PORT || '41976';
 
 } else {
-	console.log('Using local');
+	console.log('Using local dabatase. Use --force-production-state if port-forwarding.');
 	Globals.MYSQL_DEFAULT_HOST = 'localhost';
 	Globals.MYSQL_DEFAULT_PASS = '';
 	Globals.MYSQL_DEFAULT_DB = 'static';

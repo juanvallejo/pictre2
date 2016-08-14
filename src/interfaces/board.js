@@ -21,6 +21,7 @@ var nodes = {
 };
 
 var events = {};
+var cache = {};
 
 var loadedImageCount = 0;
 var isLoading = false;
@@ -207,7 +208,7 @@ Board.update = function(Interfaces, Events, Server, mainWindow) {
 	Server.getAlbum(Board.getName().toLowerCase(), function(err, data) {
 		if (err) {
 			Board.showAlert('Error: Unable to load images...');
-			return console.log('SERVER ALBUM REQUEST', err);
+			return console.log('ERR SERVER ALBUM REQUEST', err);
 		}
 
 		Board.load(Interfaces, Events, mainWindow, data);
@@ -362,7 +363,14 @@ Board.chisel = function(mainWindow, offset) {
 		if (columnCount > Board.getSize()) {
 			columnCount = Board.getSize();
 		}
+
+		// prevent any further action if column count has not changed
+		if (columnCount == cache.lastColumnCount) {
+			return;
+		}
+
 		nodes.rootNode.style.width = (columnCount * (itemWidth + (itemMargin))) + "px";
+		cache.lastColumnCount = columnCount;
 
 		if (offset) {
 			// var x = a + 1;
@@ -372,23 +380,21 @@ Board.chisel = function(mainWindow, offset) {
 			// 	this._storage.pictures[i].style.top = top + "px";
 			// }
 		} else {
-			for (var i = 0; i < Board.getSize(); i++) {
+			for (var i = 0; i < Board.pictures.length; i++) {
+				Board.pictures[i].first = false;
 				Board.pictures[i].style.clear = 'none';
-				Board.pictures[i].style.first = false;
-				Board.pictures[i].style.top = '0';
-				Board.pictures[i].style.left = '0';
+				Board.pictures[i].style.top = '0px';
+				Board.pictures[i].style.left = '0px';
 			}
-			for (var i = 0; i < Board.getSize(); i += columnCount) {
+			for (var i = 0; i < Board.pictures.length; i += columnCount) {
 				Board.pictures[i].first = true;
 			}
-			for (var i = 0; i < Board.getSize(); i++) {
-				var picture = Board.pictures[i];
-				var prevPicture = Board.pictures[i - 1];
-				if (!picture.first) {
-					picture.style.left = (parseInt(prevPicture.style.left.split("px")[0]) + prevPicture.offsetWidth + itemMargin) + "px";
+			for (var i = 0; i < Board.pictures.length; i++) {
+				if (!Board.pictures[i].first) {
+					Board.pictures[i].style.left = (parseInt(Board.pictures[i - 1].style.left.split("px")[0]) + Board.pictures[i - 1].offsetWidth + itemMargin) + "px";
 				}
 			}
-			for (var i = 0; i < Board.getSize(); i++) {
+			for (var i = 0; i < Board.pictures.length; i++) {
 				if (Board.pictures[i + columnCount]) {
 					Board.pictures[i + columnCount].style.top = ((Board.pictures[i].offsetTop + Board.pictures[i].offsetHeight + itemMargin) - (Board.pictures[i + columnCount].offsetTop)) + "px";
 				}

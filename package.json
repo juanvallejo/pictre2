@@ -1,39 +1,39 @@
 {
-  "name": "NodT",
-  "version": "1.0.0",
-  "description": "Modular Server for Node.js Applications. Used as server framework for Pictre.org",
-  "keywords": [
+	"name": "NodT",
+	"version": "1.0.0",
+	"description": "Modular Server for Node.js Applications. Used as server framework for Pictre.org",
+	"keywords": [
     "NodT",
     "modular",
     "server",
     "Pictre.org"
   ],
-  "author": {
-    "name": "Juan Vallejo",
-    "email": "juan.vallejo.12@cnu.edu",
-    "url": "http://github.com/juanvallejo"
-  },
-  "homepage": "http://pictre.org",
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/juanvallejo"
-  },
-  "engines": {
-    "node": "*",
-    "npm": "*"
-  },
-  "scripts": {
-    "start": "node ."
-  },
-  "dependencies": {
-    "browserify": "~10.2.3",
-    "gulp": "~3.8.11",
-    "gulp-util": "~3.0.5",
-    "mysql": "^2.11.1",
-    "vinyl-source-stream": "~1.1.0",
-    "watchify": "~3.2.1"
-  },
-  "bundleDependencies": [],
-  "private": true,
-  "main": "index.js"
+	"author": {
+		"name": "Juan Vallejo",
+		"email": "juan.vallejo.12@cnu.edu",
+		"url": "http://github.com/juanvallejo"
+	},
+	"homepage": "http://pictre.org",
+	"repository": {
+		"type": "git",
+		"url": "http://github.com/juanvallejo"
+	},
+	"engines": {
+		"node": "*",
+		"npm": "*"
+	},
+	"scripts": {
+		"start": "node . --force-production-state"
+	},
+	"dependencies": {
+		"browserify": "~10.2.3",
+		"gulp": "~3.8.11",
+		"gulp-util": "~3.0.5",
+		"mysql": "^2.11.1",
+		"vinyl-source-stream": "~1.1.0",
+		"watchify": "~3.2.1"
+	},
+	"bundleDependencies": [],
+	"private": true,
+	"main": "index.js"
 }
