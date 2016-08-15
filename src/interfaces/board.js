@@ -98,14 +98,26 @@ Board.getName = function() {
 
 }
 
-Board.setLoader = function(ratio) {
+Board.setLoaderWithError = function(ratio) {
 	if (!nodes.loaderNode) {
 		return;
 	}
 
+	Board.setLoader(ratio, function(progressBar) {
+		progressBar.style.background = 'rgba(205,55,0, 0.6)';
+	});
+}
+
+Board.setLoader = function(ratio, callback) {
+	if (!nodes.loaderNode || !nodes.loaderNode.children) {
+		return;
+	}
+
 	nodes.loaderNode.style.display = 'block';
-	if (nodes.loaderNode.children) {
-		nodes.loaderNode.children[0].style.width = Math.max(ratio * 100, 0) + '%';
+	nodes.loaderNode.children[0].style.width = Math.max(ratio * 100, 0) + '%';
+
+	if (typeof callback == 'function') {
+		callback.call(Board, nodes.loaderNode.children[0]);
 	}
 };
 
@@ -207,7 +219,8 @@ Board.update = function(Interfaces, Events, Server, mainWindow) {
 	Server.setRequestHead(Board.albumRequestComponents.head);
 	Server.getAlbum(Board.getName().toLowerCase(), function(err, data) {
 		if (err) {
-			Board.showAlert('Error: Unable to load images...');
+			Board.showAlert('Unable to load images at this time');
+			Board.setLoaderWithError(1);
 			return console.log('ERR SERVER ALBUM REQUEST', err);
 		}
 
@@ -221,14 +234,20 @@ Board.update = function(Interfaces, Events, Server, mainWindow) {
 Board.updateAlertComponents = function() {
 	if (Board.alertNodeComponents.extra) {
 		nodes.alertNodeComponents.extra.innerHTML = Board.alertNodeComponents.extra;
+		nodes.alertNodeComponents.extra.title = 'This board contains ' + Board.alertNodeComponents.extra + ' images';
 	} else {
 		nodes.alertNodeComponents.extra.innerHTML = '';
+		nodes.alertNodeComponents.extra.title = '';
 	}
 	nodes.alertNodeComponents.body.innerHTML = Board.alertNodeComponents.body;
 };
 
 // create all board components
 Board.create = function(Interfaces, Events, mainWindow, parentNode) {
+	if (!isCreated) {
+		isCreated = true;
+	}
+
 	// used for displaying alerts and board information
 	// sibling of application wrapper
 	nodes.alertNode = Interfaces.controller.createDivNode(mainWindow);
@@ -273,25 +292,27 @@ Board.create = function(Interfaces, Events, mainWindow, parentNode) {
  */
 Board.show = function(Interfaces, Events, Server, mainWindow, parentNode) {
 	if (!isCreated) {
-		isCreated = true;
 		Board.create(Interfaces, Events, mainWindow, parentNode);
+
+		// ensure these events are only registered once
+		// by placing them inside this logic block
+		Board.on('load', function(setCount) {
+			Board.showAlert(Board.getName() + ' Picture Board', setCount);
+			Board.chisel(mainWindow);
+		});
+
+		Board.on('chisel', function(node, itemMargin) {
+			parentNode.style.height = (node.scrollHeight + itemMargin) + "px";
+			Interfaces.controller.horizontalCenterNodeRelativeTo(node, mainWindow);
+		});
+
+		Events.onNodeHorizontalResizeEvent(mainWindow, function(e, diff) {
+			console.log('horizontal window resize');
+			Board.chisel(this);
+		});
 	}
 
 	Board.update(Interfaces, Events, Server, mainWindow);
-	Board.on('load', function(setCount) {
-		Board.showAlert(Board.getName() + ' Picture Board', setCount);
-		Board.chisel(mainWindow);
-	});
-
-	Board.on('chisel', function(node, itemMargin) {
-		parentNode.style.height = (node.scrollHeight + itemMargin) + "px";
-		Interfaces.controller.horizontalCenterNodeRelativeTo(node, mainWindow);
-	});
-
-	Events.onNodeEvent(mainWindow, 'resize', function() {
-		Board.chisel(mainWindow);
-	});
-
 };
 
 Board.showAlert = function(bodyText, extraText) {
