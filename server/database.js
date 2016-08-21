@@ -151,6 +151,17 @@ Database.selectFrom = function(mysqlTableName, databaseColumns, whereLogic, call
 }
 
 /**
+ * Selects entries with a custom mysqlStatement.
+ * Useful for custom or complex queries.
+ *
+ * @param mysqlStatement = {String} containing custom mysql query
+ */
+Database.query = function(mysqlStatement, callback) {
+	Database.connect()
+		.query(mysqlStatement, callback)
+};
+
+/**
  * updates entry in database table, using passed logic
  *
  * @param mysqlTableName  	= {Object}		entry object from local 'database' object

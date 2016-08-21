@@ -126,6 +126,44 @@ Events.onNodeVerticalResizeEvent = function(node, callback) {
 	});
 };
 
+Events.onNodeScrollEvent = function(node, callback) {
+	if (!nodeStateCache[node.nodeName]) {
+		nodeStateCache[node.nodeName] = {};
+	}
+	if (!nodeStateCache[node.nodeName].onNodeScrollEvent) {
+		nodeStateCache[node.nodeName].onNodeScrollEvent = true;
+		nodeStateCache[node.nodeName].registeredScrollCallbacks = [];
+	} else {
+		nodeStateCache[node.nodeName].registeredScrollCallbacks.push(callback);
+		return;
+	}
+
+	nodeStateCache[node.nodeName].registeredScrollCallbacks.push(callback);
+
+	try {
+		node.addEventListener('scroll', eventHandler);
+	} catch (e) {
+		node.attachEvent('onscroll', eventHandler);
+	}
+
+	function eventHandler(e) {
+		return (function(node) {
+			// iterate through all registered resize events for this node
+			for (var i = 0; i < nodeStateCache[node.nodeName].registeredScrollCallbacks.length; i++) {
+				if (typeof nodeStateCache[node.nodeName].registeredScrollCallbacks[i] == 'function') {
+					nodeStateCache[node.nodeName].registeredScrollCallbacks[i].call(node, e);
+				}
+			}
+		})(node);
+	}
+};
+
+// emits an event whenever the bottom scroll offset of a given node
+// is a certain offsetValue from the absolute bottom of the viewport.
+Events.onNodeScrollBottomOffsetEvent = function(node, offsetValue, callback) {
+	Events.onNodeScrollEvent(node, callback);
+};
+
 // executes event "callbacks" on a node event and stores them
 // for future cases of such event happening.
 // Warning: event object will not be instantly available for

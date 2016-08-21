@@ -7,10 +7,10 @@ var Server = {};
 
 Server.components = {
 	anchor: 0,
-	head: Environment.itemAmountPageLoad
+	limit: Environment.itemAmountPageLoad
 }
 
-// /api/album/<albumname>/from<0>/tolimit<100>
+// /api/album/<albumname>/offset<0>/limit<100>
 Server.get = function(endpoint, callback) {
 	var request = new XMLHttpRequest();
 	request.open('GET', endpoint, true);
@@ -42,9 +42,23 @@ Server.get = function(endpoint, callback) {
 	}
 };
 
-// retrieves album images starting at specific index
-Server.getAlbumAtAnchor = function(albumName, from, to, callback) {
-	Server.get('/api/album/' + albumName + '/' + from + '/' + to, function(err, response) {
+Server.getAlbumSize = function(albumName, callback) {
+	Server.get('/api/albumsize/' + albumName, function(err, response) {
+		if (err) {
+			return callback.call(Server, err, null);
+		}
+
+		try {
+			callback.call(Server, null, response)
+		} catch (e) {
+			callback.call(Server, e, null);
+		}
+	});
+};
+
+// retrieves album data starting at a specific anchor
+Server.getAlbumAtAnchor = function(albumName, offset, limit, callback) {
+	Server.get('/api/album/' + albumName + '/' + offset + '/' + limit, function(err, response) {
 		if (err) {
 			return callback.call(Server, err, null);
 		}
@@ -58,15 +72,15 @@ Server.getAlbumAtAnchor = function(albumName, from, to, callback) {
 };
 
 Server.getAlbum = function(albumName, callback) {
-	Server.getAlbumAtAnchor(albumName, Server.components.anchor, Server.components.head, callback);
+	Server.getAlbumAtAnchor(albumName, Server.components.anchor, Server.components.limit, callback);
 };
 
 Server.setRequestAnchor = function(data) {
 	Server.components.anchor = data;
 };
 
-Server.setRequestHead = function(data) {
-	Server.components.head = data;
+Server.setRequestLimit = function(data) {
+	Server.components.limit = data;
 }
 
 module.exports = Server;

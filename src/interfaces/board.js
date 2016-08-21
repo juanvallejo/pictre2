@@ -44,7 +44,7 @@ Board.alertNodeComponents = {
 
 Board.albumRequestComponents = {
 	anchor: 0,
-	head: Environment.itemAmountPageLoad
+	limit: Environment.itemAmountPageLoad
 };
 
 Board.pictures = [];
@@ -81,7 +81,6 @@ Board.detect = function() {
 }
 
 Board.getName = function() {
-
 	var board;
 
 	// capitalize name of board
@@ -131,14 +130,23 @@ Board.unsetLoader = function() {
 // loads a single api image into the board
 Board.loadImage = function(Interfaces, Events, mainWindow, object, imageLoadHandler) {
 	var picture = Interfaces.controller.createDivNode(mainWindow);
+	picture.innerHTML = 'Loading...';
 	picture.className = 'Pictre-pic';
 	picture.id = 'pic' + object.id;
 	picture.data = object;
 
+	Board.pictures.push(picture);
+	nodes.rootNode.appendChild(picture);
+
+	// re-position loading image
+	if (Board.getRequestAnchor()) {
+		Board.chisel(mainWindow, nodes.rootNode, Board.pictures, Board.getRequestAnchor());
+	}
+
 	var image = new Image();
 	image.src = Environment.baseAPIUrl + '/' + object.thumb;
 
-	if (!isLoadedImages && nodes.rootNode.style.display != 'none') {
+	if (!Board.getRequestAnchor() && !isLoadedImages && nodes.rootNode.style.display != 'none') {
 		nodes.rootNode.style.display = 'none';
 	}
 
@@ -166,10 +174,9 @@ Board.loadImage = function(Interfaces, Events, mainWindow, object, imageLoadHand
 
 // loads a json array of images into the board
 Board.load = function(Interfaces, Events, mainWindow, objects) {
-	isLoading = true;
 
 	function handler(picture, image) {
-		Board.imageLoadHandler(picture, image, objects.length);
+		Board.imageLoadHandler(mainWindow, picture, image, objects.length);
 	}
 
 	for (var i in objects) {
@@ -178,19 +185,19 @@ Board.load = function(Interfaces, Events, mainWindow, objects) {
 };
 
 // called when a single image is loaded
-Board.imageLoadHandler = function(picture, image, setCount) {
+Board.imageLoadHandler = function(mainWindow, picture, image, setCount) {
 	loadedImageCount++;
 
-	// no anchor means blank room for loader
-	if (!Board.albumRequestComponents.anchor) {
-		Board.setLoader(loadedImageCount / setCount);
-	}
-
-	// build tree
+	// remove "loading" note from picture and append image
+	picture.innerHTML = '';
 	picture.appendChild(image);
-	nodes.rootNode.appendChild(picture);
 
-	Board.pictures.push(picture);
+	// no anchor means blank room for loader
+	if (!Board.getRequestAnchor()) {
+		Board.setLoader(loadedImageCount / setCount);
+	} else {
+		Board.chisel(mainWindow, nodes.rootNode, Board.pictures, Board.getRequestAnchor());
+	}
 
 	if (loadedImageCount == setCount) {
 		loadedImageCount = 0;
@@ -208,15 +215,18 @@ Board.imageLoadHandler = function(picture, image, setCount) {
 	}
 };
 
-// alert entire board
+// performs a remote call to the server api, fetching every image,
+// as well as total image count, available for the current album
 Board.update = function(Interfaces, Events, Server, mainWindow) {
-	if (!isCreated) {
+	if (!isCreated || isLoading) {
 		return;
 	}
 
-	// request first set of images
-	Server.setRequestAnchor(Board.albumRequestComponents.anchor);
-	Server.setRequestHead(Board.albumRequestComponents.head);
+	isLoading = true;
+
+	// request current set of images
+	Server.setRequestAnchor(Board.getRequestAnchor());
+	Server.setRequestLimit(Board.getRequestLimit());
 	Server.getAlbum(Board.getName().toLowerCase(), function(err, data) {
 		if (err) {
 			Board.showAlert('Unable to load images at this time');
@@ -224,6 +234,12 @@ Board.update = function(Interfaces, Events, Server, mainWindow) {
 			return console.log('ERR SERVER ALBUM REQUEST', err);
 		}
 
+		if (!data.length) {
+			Board.emit('load');
+			return;
+		}
+
+		Board.setAlertExtra(data[0].total);
 		Board.load(Interfaces, Events, mainWindow, data);
 	});
 
@@ -297,18 +313,40 @@ Board.show = function(Interfaces, Events, Server, mainWindow, parentNode) {
 		// ensure these events are only registered once
 		// by placing them inside this logic block
 		Board.on('load', function(setCount) {
-			Board.showAlert(Board.getName() + ' Picture Board', setCount);
-			Board.chisel(mainWindow);
+			var offset = Board.getRequestAnchor();
+			var count = Board.getAlertExtra();
+			if (!count) {
+				count = setCount;
+			}
+
+			if (!Board.getRequestAnchor()) {
+				Board.showAlert(Board.getName() + ' Picture Board', count);
+				Board.chisel(mainWindow, nodes.rootNode, Board.pictures, offset);
+			}
+
+			// update request settings for next update
+			Board.setRequestAnchor(Board.getRequestAnchor() + Board.getRequestLimit());
+			Board.setRequestLimit(Environment.itemAmountRequest);
 		});
 
 		Board.on('chisel', function(node, itemMargin) {
-			parentNode.style.height = (node.scrollHeight + itemMargin) + "px";
+			parentNode.style.height = (node.scrollHeight + itemMargin * 2) + "px";
 			Interfaces.controller.horizontalCenterNodeRelativeTo(node, mainWindow);
 		});
 
 		Events.onNodeHorizontalResizeEvent(mainWindow, function(e, diff) {
-			console.log('horizontal window resize');
-			Board.chisel(this);
+			Board.chisel(this, nodes.rootNode, Board.pictures);
+		});
+
+		Events.onNodeScrollEvent(mainWindow, function(e) {
+			var totalViewHeight = nodes.rootNode.scrollHeight + nodes.rootNode.offsetTop;
+			var scrollOffset = (this.pageYOffset || this.document.body.scrollTop) + this.innerHeight;
+			var bottomOffset = Math.floor(this.innerHeight * 0.25);
+
+			// scroll at 25% offset from bottom
+			if (totalViewHeight - scrollOffset - bottomOffset < 0) {
+				Board.update(Interfaces, Events, Server, mainWindow);
+			}
 		});
 	}
 
@@ -337,8 +375,20 @@ Board.setRequestAnchor = function(anchor) {
 	Board.albumRequestComponents.anchor = anchor;
 };
 
-Board.setRequestHead = function(head) {
-	Board.albumRequestComponents.head = head;
+Board.setRequestLimit = function(lmit) {
+	Board.albumRequestComponents.limit = lmit;
+};
+
+Board.getAlertExtra = function() {
+	return Board.alertNodeComponents.extra;
+};
+
+Board.getRequestAnchor = function() {
+	return Board.albumRequestComponents.anchor;
+};
+
+Board.getRequestLimit = function() {
+	return Board.albumRequestComponents.limit;
 };
 
 // local events
@@ -365,65 +415,72 @@ Board.emit = function(eventName, args) {
 	}
 };
 
-// expects an offset (or zero)
-// scaffolds picture gallery
-Board.chisel = function(mainWindow, offset) {
-	if (!nodes.rootNode || !mainWindow || !Board.getSize()) {
+// Expects an offset (or zero) and places each item in
+// a collection in a gallery layout.
+// This method expetcs each collection item to be already
+// appended to a rootNode
+Board.chisel = function(mainWindow, rootNode, collection, offset) {
+	if (!rootNode || !mainWindow || !collection.length || offset < 0) {
 		return;
+	}
+	if (!offset) {
+		offset = 0;
 	}
 
 	var windowWidth = mainWindow.innerWidth;
-	var itemWidth = Board.pictures[0].offsetWidth;
+	var itemWidth = collection[0].offsetWidth;
 	var itemMargin = 0;
 	var columnCount = 0;
 
 	if (windowWidth && itemWidth) {
-		itemMargin = parseInt(mainWindow.getComputedStyle(Board.pictures[0]).getPropertyValue('margin-left').split("px")[0] * 2);
-		columnCount = Math.floor(windowWidth / (itemWidth + itemMargin));
+		itemMargin = parseInt(mainWindow.getComputedStyle(collection[0]).getPropertyValue('margin-left').split("px")[0] * 2);
+		columnCount = Math.max(1, Math.floor(windowWidth / (itemWidth + itemMargin)));
 
-		if (columnCount > Board.getSize()) {
-			columnCount = Board.getSize();
+		if (columnCount > collection.length) {
+			columnCount = collection.length;
 		}
 
 		// prevent any further action if column count has not changed
-		if (columnCount == cache.lastColumnCount) {
+		// and the entire collection is being processed with no offset
+		if (columnCount == cache.lastColumnCount && offset == 0) {
 			return;
 		}
 
-		nodes.rootNode.style.width = (columnCount * (itemWidth + (itemMargin))) + "px";
+		rootNode.style.width = (columnCount * (itemWidth + (itemMargin))) + "px";
 		cache.lastColumnCount = columnCount;
 
-		if (offset) {
-			// var x = a + 1;
-			// for (var i = x; i < x + Pictre._settings.data.limit.request; i++) {
-			// 	var top = parseInt(this._storage.pictures[i - columnCount].style.top.split("px")[0]) + this._storage.pictures[i - columnCount].offsetHeight + itemMargin;
-			// 	this._storage.pictures[i].style.left = this._storage.pictures[i - columnCount].style.left;
-			// 	this._storage.pictures[i].style.top = top + "px";
-			// }
+		for (var i = offset; i < collection.length; i++) {
+			collection[i].first = false;
+			collection[i].left = 0;
+			collection[i].style.top = '0px';
+			collection[i].style.left = '0px';
+		}
+
+		if (offset == 0) {
+			for (var i = offset; i < collection.length; i += columnCount) {
+				collection[i].first = true;
+			}
 		} else {
-			for (var i = 0; i < Board.pictures.length; i++) {
-				Board.pictures[i].first = false;
-				Board.pictures[i].style.clear = 'none';
-				Board.pictures[i].style.top = '0px';
-				Board.pictures[i].style.left = '0px';
-			}
-			for (var i = 0; i < Board.pictures.length; i += columnCount) {
-				Board.pictures[i].first = true;
-			}
-			for (var i = 0; i < Board.pictures.length; i++) {
-				if (!Board.pictures[i].first) {
-					Board.pictures[i].style.left = (parseInt(Board.pictures[i - 1].style.left.split("px")[0]) + Board.pictures[i - 1].offsetWidth + itemMargin) + "px";
-				}
-			}
-			for (var i = 0; i < Board.pictures.length; i++) {
-				if (Board.pictures[i + columnCount]) {
-					Board.pictures[i + columnCount].style.top = ((Board.pictures[i].offsetTop + Board.pictures[i].offsetHeight + itemMargin) - (Board.pictures[i + columnCount].offsetTop)) + "px";
+			for (var i = offset; i < collection.length; i++) {
+				if (collection[i - columnCount] && collection[i - columnCount].first) {
+					collection[i].first = true;
 				}
 			}
 		}
 
-		Board.emit('chisel', [nodes.rootNode, itemMargin]);
+		for (var i = offset; i < collection.length; i++) {
+			if (!collection[i].first) {
+				collection[i].left = collection[i - 1].left + collection[i - 1].offsetWidth + itemMargin;
+				collection[i].style.left = collection[i].left + "px";
+
+			}
+			if (collection[i - columnCount]) {
+				collection[i].style.top = (collection[i - columnCount].offsetTop + collection[i - columnCount].offsetHeight + itemMargin - (collection[i].offsetTop)) + "px";
+			}
+		}
 	}
+
+	Board.emit('chisel', [rootNode, itemMargin]);
 };
 
 Board.getImageByIndex = function(index) {
