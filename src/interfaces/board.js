@@ -3,6 +3,8 @@
  */
 
 var Environment = require('../environment.js');
+var Picture = require('../picture.js');
+var Img = require('../image.js');
 
 // private fields and functions
 var isSet = false;
@@ -129,44 +131,40 @@ Board.unsetLoader = function() {
 
 // loads a single api image into the board
 Board.loadImage = function(Interfaces, Events, mainWindow, object, imageLoadHandler) {
-	var picture = Interfaces.controller.createDivNode(mainWindow);
-	picture.innerHTML = 'Loading...';
-	picture.className = 'Pictre-pic';
-	picture.id = 'pic' + object.id;
-	picture.data = object;
+	var picture = new Picture(Interfaces, Events, mainWindow);
+	picture.setNodeID('pic' + object.id);
+	picture.setData(object);
+	picture.setParentNode(nodes.rootNode);
 
 	Board.pictures.push(picture);
-	nodes.rootNode.appendChild(picture);
 
 	// re-position loading image
 	if (Board.getRequestAnchor()) {
 		Board.chisel(mainWindow, nodes.rootNode, Board.pictures, Board.getRequestAnchor());
 	}
 
-	var image = new Image();
-	image.src = Environment.baseAPIUrl + '/' + object.thumb;
+	var image = new Img(Events, mainWindow, Environment.baseAPIUrl + '/' + object.thumb);
 
 	if (!Board.getRequestAnchor() && !isLoadedImages && nodes.rootNode.style.display != 'none') {
 		nodes.rootNode.style.display = 'none';
 	}
 
-	Events.onNodeEvent(image, 'load', function() {
-		return (function(picture, image) {
-			imageLoadHandler(picture, image);
-		})(picture, image);
-	});
+	image.on('load', function(err, e) {
+		if (!err) {
+			return (function(picture, image) {
+				imageLoadHandler(picture, image);
+			})(picture, image);
+		}
 
-	Events.onNodeEvent(image, 'error', function() {
+		// assume error loading image
 		var height = Environment.maxImageHeight;
-		var paddingTop = parseInt(mainWindow.getComputedStyle(picture).getPropertyValue('padding-top').split("px")[0]) + 1;
-		var paddingBottom = parseInt(mainWindow.getComputedStyle(picture).getPropertyValue('padding-bottom').split("px")[0]);
+		var paddingTop = picture.getCSSComputedStyleAsInt(mainWindow, 'padding-top') + 1;
+		var paddingBottom = picture.getCSSComputedStyleAsInt(mainWindow, 'padding-bottom') + 1;
 
-		var errImg = new Image();
-		errImg.src = '/static/i/Pictre-404.png';
+		var errImg = new Img(Events, mainWindow, '/static/i/Pictre-404.png');
 
-		this.innerHTML = '';
-		this.data.src = '/static/i/Pictre-404.full.png';
-		this.style.height = (height - paddingTop + paddingBottom * 2) + 'px';
+		this.setDataValue('src', '/static/i/Pictre-404.full.png');
+		this.setCSSPropertyValue('height', (height - paddingTop + paddingBottom * 2) + 'px');
 
 		imageLoadHandler(this, errImg);
 	}.bind(picture));
@@ -174,9 +172,10 @@ Board.loadImage = function(Interfaces, Events, mainWindow, object, imageLoadHand
 
 // loads a json array of images into the board
 Board.load = function(Interfaces, Events, mainWindow, objects) {
-
 	function handler(picture, image) {
-		Board.imageLoadHandler(mainWindow, picture, image, objects.length);
+		picture.setInnerText('');
+		picture.addImage(image);
+		Board.imageLoadHandler(mainWindow, objects.length);
 	}
 
 	for (var i in objects) {
@@ -185,12 +184,8 @@ Board.load = function(Interfaces, Events, mainWindow, objects) {
 };
 
 // called when a single image is loaded
-Board.imageLoadHandler = function(mainWindow, picture, image, setCount) {
+Board.imageLoadHandler = function(mainWindow, setCount) {
 	loadedImageCount++;
-
-	// remove "loading" note from picture and append image
-	picture.innerHTML = '';
-	picture.appendChild(image);
 
 	// no anchor means blank room for loader
 	if (!Board.getRequestAnchor()) {
@@ -355,7 +350,7 @@ Board.show = function(Interfaces, Events, Server, mainWindow, parentNode) {
 
 Board.showAlert = function(bodyText, extraText) {
 	if (!nodes.alertNode) {
-		return console.log('BOARD ALERT', 'An attempt was made to place an alert without "show"ing the board first.');
+		return console.log('BOARD ALERT', 'An attempt was made to place an alert without creating the board components first.');
 	}
 
 	Board.setAlertBody(bodyText || '');
@@ -428,14 +423,13 @@ Board.chisel = function(mainWindow, rootNode, collection, offset) {
 	}
 
 	var windowWidth = mainWindow.innerWidth;
-	var itemWidth = collection[0].offsetWidth;
+	var itemWidth = collection[0].getNodePropertyValue('offsetWidth');
 	var itemMargin = 0;
 	var columnCount = 0;
 
 	if (windowWidth && itemWidth) {
-		itemMargin = parseInt(mainWindow.getComputedStyle(collection[0]).getPropertyValue('margin-left').split("px")[0] * 2);
+		itemMargin = collection[0].getCSSComputedStyleAsInt('margin-left') * 2;
 		columnCount = Math.max(1, Math.floor(windowWidth / (itemWidth + itemMargin)));
-
 		if (columnCount > collection.length) {
 			columnCount = collection.length;
 		}
@@ -446,36 +440,38 @@ Board.chisel = function(mainWindow, rootNode, collection, offset) {
 			return;
 		}
 
+
 		rootNode.style.width = (columnCount * (itemWidth + (itemMargin))) + "px";
 		cache.lastColumnCount = columnCount;
 
 		for (var i = offset; i < collection.length; i++) {
-			collection[i].first = false;
-			collection[i].left = 0;
-			collection[i].style.top = '0px';
-			collection[i].style.left = '0px';
+			collection[i].removeFlag('first');
+			collection[i].setFlag('left', 0);
+			collection[i].setCSSPropertyValue('top', '0px');
+			collection[i].setCSSPropertyValue('left', '0px');
 		}
 
 		if (offset == 0) {
 			for (var i = offset; i < collection.length; i += columnCount) {
-				collection[i].first = true;
+				collection[i].setFlag('first');
 			}
 		} else {
 			for (var i = offset; i < collection.length; i++) {
-				if (collection[i - columnCount] && collection[i - columnCount].first) {
-					collection[i].first = true;
+				if (collection[i - columnCount] && collection[i - columnCount].hasFlag('first')) {
+					collection[i].setFlag('first');
 				}
 			}
 		}
 
 		for (var i = offset; i < collection.length; i++) {
-			if (!collection[i].first) {
-				collection[i].left = collection[i - 1].left + collection[i - 1].offsetWidth + itemMargin;
-				collection[i].style.left = collection[i].left + "px";
+			if (!collection[i].hasFlag('first')) {
+				collection[i].setFlag('left', collection[i - 1].getFlag('left') + collection[i - 1].getNodePropertyValue('offsetWidth') + itemMargin);
+				collection[i].setCSSPropertyValue('left', collection[i].getFlag('left') + "px");
 
 			}
 			if (collection[i - columnCount]) {
-				collection[i].style.top = (collection[i - columnCount].offsetTop + collection[i - columnCount].offsetHeight + itemMargin - (collection[i].offsetTop)) + "px";
+				collection[i].setCSSPropertyValue('top',
+					(collection[i - columnCount].getNodePropertyValue('offsetTop') + collection[i - columnCount].getNodePropertyValue('offsetHeight') + itemMargin - (collection[i].getNodePropertyValue('offsetTop'))) + "px");
 			}
 		}
 	}
@@ -486,14 +482,14 @@ Board.chisel = function(mainWindow, rootNode, collection, offset) {
 Board.getImageByIndex = function(index) {
 	var picture = Board.getPictureByIndex(index)
 	if (picture) {
-		return picture.children[0];
+		return picture.getImageNode();
 	}
 	return null;
 };
 
 Board.getImageById = function(id) {
 	for (var i = 0; i < Board.pictures.length; i++) {
-		if (Board.pictures[i].data.id == id) {
+		if (Board.pictures[i].getNodeID() == id) {
 			return Board.pictures[i];
 		}
 	}
