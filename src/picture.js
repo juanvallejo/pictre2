@@ -25,6 +25,17 @@ function Picture(Interfaces, Events, mainWindow) {
 	this.data = {};
 	this.flags = {};
 
+	this.callbacks = {
+		click: []
+	};
+
+	// calls all functions in events.callbacks.click
+	this.clickHandler = function(e) {
+		for (var i = 0; i < self.callbacks.click.length; i++) {
+			self.callbacks.click[i].call(self, e);
+		}
+	};
+
 	// set node id
 	this.setNodeID = function(id) {
 		this.node.id = id;
@@ -43,6 +54,11 @@ function Picture(Interfaces, Events, mainWindow) {
 	// sets a specific property value for the data struct
 	this.setDataValue = function(property, value) {
 		this.data[property] = value;
+	};
+
+	// retrieves main image URI stored in the picture's data
+	this.getImageURI = function() {
+		return this.data.src;
 	};
 
 	// retrieve this node's computed style for specific property
@@ -139,13 +155,13 @@ function Picture(Interfaces, Events, mainWindow) {
 		this.node.innerHTML = text;
 	};
 
-	// define event handlers for this instance
-	this.clickEventHandler = function(e) {
-		console.log(Interfaces.overlay);
+	// sets callback to call on a click event
+	this.addClickHandler = function(callback) {
+		this.callbacks.click.push(callback);
 	};
 
-	// attach node events
-	attachEventClick(Events, this.node, this.clickEventHandler);
+	// attach node events to respective callbacks
+	bindEvent(Events, 'click', this.node, this.clickHandler);
 }
 
 // alters all new instances
@@ -154,8 +170,8 @@ Picture.setInnerText = function(text) {
 };
 
 // internal object functions
-function attachEventClick(Events, node, handler) {
-	Events.onNodeEvent(node, 'click', handler);
+function bindEvent(Events, eventName, node, handler) {
+	Events.onNodeEvent(node, eventName, handler);
 }
 
 module.exports = Picture;

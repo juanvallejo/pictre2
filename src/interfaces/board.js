@@ -135,6 +135,9 @@ Board.loadImage = function(Interfaces, Events, mainWindow, object, imageLoadHand
 	picture.setNodeID('pic' + object.id);
 	picture.setData(object);
 	picture.setParentNode(nodes.rootNode);
+	picture.addClickHandler(function(e) {
+		Interfaces.overlay.showWithPicture(Interfaces, Events, mainWindow, this);
+	});
 
 	Board.pictures.push(picture);
 
