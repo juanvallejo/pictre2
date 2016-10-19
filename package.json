@@ -1,22 +1,22 @@
 {
-	"name": "NodT",
+	"name": "Pictre",
 	"version": "1.0.0",
-	"description": "Modular Server for Node.js Applications. Used as server framework for Pictre.org",
+	"description": "Photo-album application",
 	"keywords": [
-    "NodT",
-    "modular",
-    "server",
+    "Pictre",
+    "Version2",
+    "Pictre2",
     "Pictre.org"
   ],
 	"author": {
 		"name": "Juan Vallejo",
 		"email": "juan.vallejo.12@cnu.edu",
-		"url": "http://github.com/juanvallejo"
+		"url": "https://github.com/juanvallejo"
 	},
 	"homepage": "http://pictre.org",
 	"repository": {
 		"type": "git",
-		"url": "http://github.com/juanvallejo"
+		"url": "https://github.com/juanvallejo"
 	},
 	"engines": {
 		"node": "*",
