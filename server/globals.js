@@ -13,6 +13,7 @@ var Globals = {};
 
 Globals.IN_PRODUCTION = process.env.OPENSHIFT_NODEJS_IP ? true : false;
 Globals.USE_PRODUCTION_DB = Globals.IN_PRODUCTION;
+Globals.USE_HTTPS = process.env.USE_HTTPS || false
 
 // if a --force-production-state flag is passed on the command line, force the global IN_PRODUCTION constant to be true
 // used for debugging offline, with a live, port-forwarded copy of the database

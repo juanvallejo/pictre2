@@ -14,13 +14,32 @@
  *
  **/
 
-// import http module
+// import default http module
 var http = require('http');
 
 // import custom node libraries
 var Globals = require('./server/globals.js');
 var Handlers = require('./server/handlers.js');
 // var Sockets			= require('./server/sockets.js');
+
+// default server instance
+var httpServer = http.createServer(function(req, res) {
+	Handlers.mainRequestHandler(req, res, Globals);
+});
+
+// import desired http / https module
+if (Globals.USE_HTTPS) {
+	var fs = require('fs');
+	var https = require('https');
+
+	var privateKey = fs.readFileSync('server.key').toString();
+	var certificate = fs.readFileSync('server.crt').toString();
+	var options = {key: privateKey, cert: certificate};
+
+	httpServer = https.createServer(options, function(req, res) {
+		Handler.mainRequestHandler(req, res, Globals);
+	});
+}
 
 // define root of working directory
 Globals.rootDirectory = __dirname;
@@ -29,14 +48,17 @@ Globals.rootDirectory = __dirname;
 (function main(application) {
 
 	// define global application server and bind to a specified port
-	application = http.createServer(function(req, res) {
-		Handlers.mainRequestHandler(req, res, Globals)
-	});
+	application = httpServer;
+
+	if (Globals.USE_HTTPS) {
+		console.log('SERVER using an encrypted connection (https)');
+	}
+
 	application.listen(Globals.SERVER_PORT, Globals.SERVER_HOST);
 
 	application.on('error', function(err) {
 		if (err.code == 'EADDRINUSE') {
-			console.log('SERVER INFO port' + Globals.SERVER_PORT + ' busy.');
+			console.log('SERVER INFO port "' + Globals.SERVER_PORT + '" busy.');
 			Globals.SERVER_PORT++
 			
 			console.log('SERVER INFO restarting application on port', Globals.SERVER_PORT);
@@ -44,11 +66,7 @@ Globals.rootDirectory = __dirname;
 			return;
 		}
 		console.log('SERVER ERR', err);
-	})
-
-	application.on('request', function(req, res) {
-		console.log('SERVER REQUEST received a request', req.url);
-	})
+	});
 
 	console.log('Application listening on port', Globals.SERVER_PORT);
 	// initialize socket.io
