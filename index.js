@@ -25,7 +25,6 @@ var Handlers = require('./server/handlers.js');
 // define root of working directory
 Globals.rootDirectory = __dirname;
 
-
 // initialize application
 (function main(application) {
 
@@ -34,6 +33,22 @@ Globals.rootDirectory = __dirname;
 		Handlers.mainRequestHandler(req, res, Globals)
 	});
 	application.listen(Globals.SERVER_PORT, Globals.SERVER_HOST);
+
+	application.on('error', function(err) {
+		if (err.code == 'EADDRINUSE') {
+			console.log('SERVER INFO port' + Globals.SERVER_PORT + ' busy.');
+			Globals.SERVER_PORT++
+			
+			console.log('SERVER INFO restarting application on port', Globals.SERVER_PORT);
+			main(Globals.Application);
+			return;
+		}
+		console.log('SERVER ERR', err);
+	})
+
+	application.on('request', function(req, res) {
+		console.log('SERVER REQUEST received a request', req.url);
+	})
 
 	console.log('Application listening on port', Globals.SERVER_PORT);
 	// initialize socket.io
