@@ -108,7 +108,7 @@ SplashInterface.show = function(Interfaces, Events, Client, mainWindow, parentNo
 
 	SplashInterface.attachInputs(Interfaces, Events, Client, mainWindow);
 
-	Interfaces.overlay.show(mainWindow);
+	Interfaces.overlay.show(Events, mainWindow);
 	Interfaces.modal.show(Interfaces, Events, mainWindow, parentNode);
 
 	Interfaces.controller.setNodeOverflowHidden(mainWindow.document.body);
